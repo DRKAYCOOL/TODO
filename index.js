@@ -5,6 +5,7 @@ let savedTasksContainer = document.getElementById("saved-tasks-container")
 
 
 todoArray = []
+editingSignal = -1
 
 form.addEventListener(`submit`, storeTask)
 
@@ -24,11 +25,29 @@ function storeTask(event){
         console.log("Task already exist!")
         alert(`Task already exist!`)
     }else{
-        let taskObject = {
-            todo : task,
-            checked : false
-        }
-        todoArray.push(taskObject)
+        if(editingSignal >= 0){
+            todoArray = todoArray.map(function(item, index){
+                if(editingSignal === index){
+                    return{
+                        todo : task,
+                        checked : item.checked
+                    }
+                }else{
+                    return{
+                        todo : item.todo,
+                        checked : item.checked
+                    }
+                }
+            })
+            editingSignal = -1; // Reset the editing signal
+            button.textContent = "Add Task"; // Reset button text to default
+        }else{
+            const taskObject = {
+                todo : task,
+                checked : false
+            }
+            todoArray.push(taskObject)
+        }        
         form.reset()
         storeToLocalStorage()
         displayTasktoUI()
@@ -121,9 +140,9 @@ savedTasksContainer.addEventListener("click", function(event){
     if(dataAction === "check"){
         checkTodo(todoID)
     }else if(dataAction === "edit"){
-        editTodo()
+        editTodo(todoID)
     }else if(dataAction === "delete"){
-        deleteTodo()
+        deleteTodo(todoID)
     }
 })
 
@@ -144,3 +163,15 @@ function checkTodo(idOfTodo){
 displayTasktoUI()
 }
 
+function deleteTodo(todoID){
+    todoArray = todoArray.filter(function(item, index){
+        return index !== todoID
+    })
+    displayTasktoUI()
+}
+
+function editTodo(todoID){
+    userInput.value = todoArray[todoID].todo
+    editingSignal = todoID
+    button.textContent = "Edit"
+}
